@@ -67,7 +67,7 @@ class ModelEvent:
 
 class EventBus:
     """Simple event bus for model-wide communication"""
-    
+
     def __init__(self):
         self.subscribers: Dict[str, List[Callable[[ModelEvent], None]]] = {}
     

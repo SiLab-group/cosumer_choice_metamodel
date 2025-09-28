@@ -1,39 +1,79 @@
-# Consumer Choice Metamodel Framework
-This package provides abstract base classes and interfaces for implementing
-the Consumer Choice Metamodel as described in "Consumer Choice Metamodel: 
-A Conceptual Validation Approach" by Amy Liffey et al. 
+# Consumer Choice Metamodel
 
-- Add figure here
+This package provides abstract base classes and interfaces for implementing the Consumer Choice Metamodel as described in "Consumer Choice Metamodel: A Conceptual Validation Approach" by Amy Liffey et al.
 
-[1] cite 
+## Overview
 
-## Project Structure
+The Consumer Choice Metamodel is a framework for building consumer behavior simulation models. This package provides the core infrastructure and abstract classes needed to implement agent-based models of consumer decision-making processes.
+
+
+## Installation
+
+### Prerequisites
+
+- Python 3.7 or higher
+- pip package manager
+
+### Install from GitHub
+
+Since this package is hosted on GitHub, you can install it directly using pip:
 
 ```bash
-consumer_choice_metamodel/
-├── __init__.py                 # Package initialization and main imports
-├── types.py                    # Base enums and type definitions
-├── agent.py                    # Agent-related classes
-├── environment.py              # Environment and asset classes  
-├── information.py              # Information processing classes
-├── model.py                    # Main model class
-├── factory.py                  # Factory pattern classes
-├── utils.py                    # Validation and event system utilities
-└── consumer_choice_metamodel.py # Main entry point (backward compatibility)
+pip install git+https://github.com/SiLab-group/cosumer_choice_metamodel.git
 ```
 
-## Module Breakdown
+### Development Installation
 
-### 📄 `types.py`
+For development or to contribute to the project:
+
+1. Clone the repository:
+```bash
+git clone https://github.com/SiLab-group/cosumer_choice_metamodel.git
+cd cosumer_choice_metamodel
+```
+
+2. Create a virtual environment (recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install in editable mode:
+```bash
+pip install -e .
+```
+
+### Dependencies
+
+The package likely depends on standard Python libraries. If there are additional requirements, they will be automatically installed during the pip installation process.
+
+## Package Structure
+
+```
+consumer_choice_metamodel/
+├── __init__.py                    # Package initialization and main imports
+├── types.py                       # Base enums and type definitions
+├── agent.py                       # Agent-related classes
+├── environment.py                 # Environment and asset classes
+├── information.py                 # Information processing classes
+├── model.py                       # Main model class
+├── factory.py                     # Factory pattern classes
+├── utils.py                       # Validation and event system utilities
+└── consumer_choice_metamodel.py   # Main entry point (backward compatibility)
+```
+
+## Core Components
+
+### Enumerations and Types
 - `TriggerType`: Enumeration of decision triggers
 - `EvaluationDimension`: Enumeration of choice evaluation dimensions
 
-### 📄 `agent.py`
+### Agent Classes
 - `AgentAttributes`: Abstract base for agent characteristics
 - `ChoiceModule`: Abstract base for agent decision-making logic
 - `ConsumerAgent`: Main agent class with complete behavior
 
-### 📄 `environment.py`
+### Environment Classes
 - `PhysicalAsset`: Abstract base for physical objects/technologies
 - `KnowledgeAsset`: Abstract base for information objects
 - `Network`: Abstract base for agent networks
@@ -41,27 +81,30 @@ consumer_choice_metamodel/
 - `ExogenousProcess`: Abstract base for external processes
 - `Environment`: Main environment container class
 
-### 📄 `information.py`
+### Information Processing
 - `InformationFilter`: Abstract base for filtering information
 - `InformationDistorter`: Abstract base for biasing information
 - `Transformer`: Manages information flow between agents and environment
 
-### 📄 `model.py`
+### Model and Factory Classes
 - `ConsumerChoiceModel`: Main simulation model class
-
-### 📄 `factory.py`
 - `ModelComponentFactory`: Abstract factory for creating model components
 
-### 📄 `utils.py`
+### Utilities
 - `ModelValidator`: Validation utilities for model components
 - `ModelEvent`: Event system for model communication
 - `EventBus`: Event distribution system
 
-## Usage Examples
+## Quick Start
 
-### Basic Import Patterns
+### Basic Usage
 
 ```python
+from consumer_choice_metamodel import (
+    ConsumerChoiceModel, ConsumerAgent, Environment,
+    AgentAttributes, ChoiceModule, PhysicalAsset
+)
+
 # Import specific classes
 from consumer_choice_metamodel import ConsumerAgent, Environment, AgentAttributes
 
@@ -73,13 +116,10 @@ from consumer_choice_metamodel.agent import ChoiceModule
 from consumer_choice_metamodel.environment import PhysicalAsset
 ```
 
-### Implementation Template
+### Example Implementation
 
 ```python
-from consumer_choice_metamodel import (
-    ConsumerChoiceModel, ConsumerAgent, Environment,
-    AgentAttributes, ChoiceModule, PhysicalAsset
-)
+from consumer_choice_metamodel import AgentAttributes
 
 class MyAgentAttributes(AgentAttributes):
     def __init__(self, agent_id: str, income: float, age: int):
@@ -107,5 +147,47 @@ class MyAgentAttributes(AgentAttributes):
         for key, value in changes.items():
             setattr(self, key, value)
 
-# Implement other required classes...
+# Create an agent with custom attributes
+agent_attrs = MyAgentAttributes("agent_001", income=50000, age=35)
+agent = ConsumerAgent(attributes=agent_attrs)
 ```
+
+## Documentation
+
+For more detailed documentation and examples, please refer to the research paper:
+"Consumer Choice Metamodel: A Conceptual Validation Approach" by Amy Liffey et al.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+Please check the repository for license information.
+
+## Support
+
+For questions, issues, or contributions, please:
+- Open an issue on [GitHub](https://github.com/SiLab-group/cosumer_choice_metamodel/issues)
+- Contact the SiLab-group team
+
+## Citation
+
+If you use this package in your research, please cite:
+
+```
+Liffey, A. et al. "Consumer Choice Metamodel: A Conceptual Validation Approach"
+```
+
+## Changelog
+
+### Version History
+- Check the repository's releases page for detailed version history and changes
+
+---
+
+*This package is maintained by the SiLab-group research team.*
