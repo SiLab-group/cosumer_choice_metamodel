@@ -32,6 +32,9 @@ from .environment import (
 # Import information processing classes
 from .information import InformationFilter, InformationDistorter, Transformer
 
+# Import scheduling classes
+from .schedule import Scheduler, SequentialScheduler, RandomActivationScheduler, Phase, PhasedScheduler
+
 # Import main model class
 from .model import ConsumerChoiceModel
 
@@ -42,7 +45,7 @@ from .factory import ModelComponentFactory
 from .utils import ModelValidator, ModelEvent, EventBus
 
 # Package metadata
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Consumer Choice Metamodel Framework"
 __description__ = "Abstract framework for consumer choice modeling"
 
@@ -69,7 +72,14 @@ __all__ = [
     'InformationFilter',
     'InformationDistorter',
     'Transformer',
-    
+
+    # Scheduling
+    'Scheduler',
+    'SequentialScheduler',
+    'RandomActivationScheduler',
+    'Phase',
+    'PhasedScheduler',
+
     # Main model
     'ConsumerChoiceModel',
     
@@ -114,9 +124,8 @@ class MyAgentAttributes(AgentAttributes):
         pass
 
 class MyChoiceModule(ChoiceModule):
-    def add_trigger(self, trigger_type, context):
-        self.pending_triggers.append({'type': trigger_type, 'context': context})
-    
+    # add_trigger() has a default implementation; override it if needed
+
     def evaluate_option(self, option, evaluation_context):
         # Return evaluations for each dimension
         pass

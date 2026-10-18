@@ -27,6 +27,9 @@ from consumer_choice_metamodel.environment import (
 from consumer_choice_metamodel.information import (
     InformationFilter, InformationDistorter, Transformer
 )
+from consumer_choice_metamodel.schedule import (
+    Scheduler, SequentialScheduler, RandomActivationScheduler, Phase, PhasedScheduler
+)
 from consumer_choice_metamodel.model import ConsumerChoiceModel
 from consumer_choice_metamodel.factory import ModelComponentFactory
 from consumer_choice_metamodel.utils import ModelValidator, ModelEvent, EventBus
@@ -46,7 +49,7 @@ domains and modeling platforms.
 """
 
 # Version information
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Consumer Choice Metamodel Framework"
 
 # For users who want to check what's available
@@ -57,6 +60,8 @@ def list_available_classes():
         'ConsumerAgent', 'PhysicalAsset', 'KnowledgeAsset', 'Network',
         'RulesOfInteraction', 'ExogenousProcess', 'Environment',
         'InformationFilter', 'InformationDistorter', 'Transformer',
+        'Scheduler', 'SequentialScheduler', 'RandomActivationScheduler',
+        'Phase', 'PhasedScheduler',
         'ConsumerChoiceModel', 'ModelComponentFactory', 'ModelValidator',
         'ModelEvent', 'EventBus'
     ]
@@ -74,6 +79,7 @@ Consumer Choice Metamodel Framework Structure:
 ├── 📄 agent.py                 # Agent classes (AgentAttributes, ChoiceModule, ConsumerAgent)
 ├── 📄 environment.py           # Environment and assets (Environment, PhysicalAsset, KnowledgeAsset, etc.)
 ├── 📄 information.py           # Information processing (InformationFilter, Transformer, etc.)
+├── 📄 schedule.py              # Agent activation (SequentialScheduler, PhasedScheduler, etc.)
 ├── 📄 model.py                 # Main model class (ConsumerChoiceModel)
 ├── 📄 factory.py               # Factory pattern (ModelComponentFactory)
 └── 📄 utils.py                 # Utilities (ModelValidator, EventBus, etc.)

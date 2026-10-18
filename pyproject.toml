@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "consumer-choice-metamodel"
-version = "0.1.0"
+version = "1.1.0"
 description = "Abstract base classes and interfaces for implementing the Consumer Choice Metamodel for agent-based consumer behavior simulation"
 readme = "README.md"
 license = {text = "MIT"}
