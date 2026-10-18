@@ -9,19 +9,6 @@ The Consumer Choice Metamodel is a framework for building consumer behavior simu
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.7 or higher
-- pip package manager
-
-### Install from GitHub
-
-Install with pip:
-
-```bash
-pip install git+https://github.com/SiLab-group/cosumer_choice_metamodel.git
-```
-
 ### Development Installation
 
 For development or to contribute to the project:
@@ -34,7 +21,7 @@ cd cosumer_choice_metamodel
 
 2. Create a virtual environment (recommended):
 ```bash
-python -m venv venv
+python -m venv .venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
@@ -282,14 +269,6 @@ print(results["final_stats"])     # {'time': 10, 'adopters': ...}
 `examples/example_adoption.py` is a larger example with information filters, cognitive
 biases, a spatial network, policy incentives and decision triggers.
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## License
 
 Apache License 2.0, see [LICENSE](LICENSE).
@@ -299,12 +278,21 @@ Apache License 2.0, see [LICENSE](LICENSE).
 
 If you use this package in your research, please cite:
 
+> Liffey, A. et al. (2026). A Conceptual Validation of the Consumer Choice Framework.
+> In: Verhagen, H., Chappin, E., Scholz, G. (eds), *Advances in Social Simulation* (SSC 2025).
+> Springer Proceedings in Complexity. Springer, Cham.
+> [https://doi.org/10.1007/978-3-032-31712-4_27](https://doi.org/10.1007/978-3-032-31712-4_27)
+
+```bibtex
+@inproceedings{liffey2026consumerchoice,
+  author    = {Liffey, Amy and others},
+  title     = {A Conceptual Validation of the Consumer Choice Framework},
+  booktitle = {Advances in Social Simulation},
+  editor    = {Verhagen, Harko and Chappin, Emile and Scholz, Geeske},
+  series    = {Springer Proceedings in Complexity},
+  publisher = {Springer, Cham},
+  year      = {2026},
+  doi       = {10.1007/978-3-032-31712-4_27}
+}
 ```
-Liffey, A. et al. (2026). A Conceptual Validation of the Consumer Choice Framework. In: Verhagen, H., Chappin, E., Scholz, G. (eds) Advances in Social Simulation. SSC 2025 2025. Springer Proceedings in Complexity. Springer, Cham. https://doi.org/10.1007/978-3-032-31712-4_27
-```
 
-Subclasses that override `ConsumerChoiceModel.__init__` must call `super().__init__()`, which sets up `rng`, `scheduler` and `event_bus`.
-
----
-
-*This package is maintained by the SiLab-group research team.*
