@@ -2,6 +2,7 @@
 Agent-related classes for the Consumer Choice Metamodel
 """
 
+import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, List, Any, Optional, Union
@@ -43,10 +44,13 @@ class ChoiceModule(ABC):
         self.agent_attributes = agent_attributes
         self.pending_triggers: List[Dict[str, Any]] = []
     
-    @abstractmethod
     def add_trigger(self, trigger_type: TriggerType, context: Dict[str, Any]) -> None:
-        """Add trigger event"""
-        pass
+        """Add trigger event (override to filter or enrich triggers)"""
+        self.pending_triggers.append({
+            'type': trigger_type,
+            'context': context,
+            'timestamp': context.get('current_time'),
+        })
     
     @abstractmethod
     def evaluate_option(self, option: 'PhysicalAsset', 
@@ -77,13 +81,19 @@ class ChoiceModule(ABC):
 class ConsumerAgent(ABC):
     """Abstract base class for consumer agents"""
     
-    def __init__(self, agent_id: str, attributes: AgentAttributes, 
-                 choice_module: ChoiceModule, transformer: 'Transformer'):
+    # memory key under which step() stores the latest perception
+    PERCEPTION_KEY = 'perception'
+
+    def __init__(self, agent_id: str, attributes: AgentAttributes,
+                 choice_module: ChoiceModule, transformer: 'Transformer',
+                 rng: Optional[random.Random] = None):
         self.agent_id = agent_id
         self.attributes = attributes
         self.choice_module = choice_module
         self.transformer = transformer
         self.memory: Dict[str, Any] = {}
+        # set to the model's rng by ConsumerChoiceModel.add_agents()
+        self.rng = rng if rng is not None else random.Random()
     
     @abstractmethod
     def perceive_environment(self, environment: 'Environment') -> Dict[str, Any]:
@@ -107,9 +117,10 @@ class ConsumerAgent(ABC):
     
     def step(self, environment: 'Environment') -> None:
         """Main agent step function - template method pattern"""
-        # 1. Perceive environment  
+        # 1. Perceive environment (stored for make_decisions)
         perception = self.perceive_environment(environment)
-        
+        self.memory[self.PERCEPTION_KEY] = perception
+
         # 2. Make decisions
         decisions = self.make_decisions(environment)
         

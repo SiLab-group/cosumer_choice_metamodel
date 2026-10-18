@@ -8,11 +8,16 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 
-@dataclass
+@dataclass(eq=False)
 class PhysicalAsset(ABC):
-    """Abstract representation of physical assets in environment"""
+    """Abstract representation of physical assets in environment.
+
+    Assets compare by identity and are hashable. asset_id is generated, so
+    dataclass subclasses may declare required fields; decorate them with
+    @dataclass(eq=False) to keep identity comparison.
+    """
     name: str
-    asset_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    asset_id: str = field(default_factory=lambda: str(uuid.uuid4()), init=False)
     
     @abstractmethod
     def get_availability(self) -> float:
@@ -30,12 +35,15 @@ class PhysicalAsset(ABC):
         pass
 
 
-@dataclass
+@dataclass(eq=False)
 class KnowledgeAsset(ABC):
-    """Abstract representation of information in environment"""
+    """Abstract representation of information in environment.
+
+    Compares by identity and is hashable; asset_id is generated.
+    """
     topic: str
     source: str
-    asset_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    asset_id: str = field(default_factory=lambda: str(uuid.uuid4()), init=False)
     
     @abstractmethod
     def get_reliability(self) -> float:

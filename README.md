@@ -16,7 +16,7 @@ The Consumer Choice Metamodel is a framework for building consumer behavior simu
 
 ### Install from GitHub
 
-Since this package is hosted on GitHub, you can install it directly using pip:
+Install with pip:
 
 ```bash
 pip install git+https://github.com/SiLab-group/cosumer_choice_metamodel.git
@@ -45,7 +45,7 @@ pip install -e .
 
 ### Dependencies
 
-The package likely depends on standard Python libraries. If there are additional requirements, they will be automatically installed during the pip installation process.
+The core package uses only the Python standard library. Optional extras: `dev` (testing and linting), `docs` and `simulation` (numpy, pandas, networkx, matplotlib, scipy), e.g. `pip install -e ".[dev]"`.
 
 ## Package Structure
 
@@ -56,6 +56,7 @@ consumer_choice_metamodel/
 ├── agent.py                       # Agent-related classes
 ├── environment.py                 # Environment and asset classes
 ├── information.py                 # Information processing classes
+├── schedule.py                    # Agent activation schedules
 ├── model.py                       # Main model class
 ├── factory.py                     # Factory pattern classes
 ├── utils.py                       # Validation and event system utilities
@@ -86,71 +87,200 @@ consumer_choice_metamodel/
 - `InformationDistorter`: Abstract base for biasing information
 - `Transformer`: Manages information flow between agents and environment
 
+### Scheduling
+- `Scheduler`: Abstract base deciding how agents are activated in a step
+- `SequentialScheduler`: Every agent once, in list order (default)
+- `RandomActivationScheduler`: Every agent once, in a new random order each step
+- `PhasedScheduler` / `Phase`: Named stages run one after another, each across all agents; a `Phase` with `per_agent=False` runs once per step
+
 ### Model and Factory Classes
-- `ConsumerChoiceModel`: Main simulation model class
+- `ConsumerChoiceModel`: Main simulation model class; owns the seeded `rng`, the `scheduler` and the `event_bus`
 - `ModelComponentFactory`: Abstract factory for creating model components
 
 ### Utilities
-- `ModelValidator`: Validation utilities for model components
+- `ModelValidator`: Validation utilities for model components, with configurable required socio-economic attributes
 - `ModelEvent`: Event system for model communication
-- `EventBus`: Event distribution system
+- `EventBus`: Event distribution system with timestamps, wildcard subscriptions and `unsubscribe`
+
+## Scheduling, randomness and events
+
+```python
+from consumer_choice_metamodel import ConsumerChoiceModel, PhasedScheduler, Phase
+
+class MyModel(ConsumerChoiceModel):
+    ...  # initialize_model, create_agents, create_environment
+
+def consider_bundles(agent, model): ...
+def consider_single_technologies(agent, model): ...
+def recount_adopters(model): ...
+
+model = MyModel(
+    seed=42,                                   # same seed -> same run
+    scheduler=PhasedScheduler([
+        Phase("bundles", consider_bundles),
+        Phase("recount", recount_adopters, per_agent=False),
+        Phase("singles", consider_single_technologies),
+    ]),                                        # default: SequentialScheduler()
+)
+```
+
+- **Randomness**: draw every random number from `model.rng` (a `random.Random`). Register agents with `model.add_agents(agents)` so that `agent.rng` is the same generator, and set `factory.rng = model.rng` when a factory creates stochastic components.
+- **Perception**: `ConsumerAgent.step()` stores the result of `perceive_environment()` in `agent.memory[ConsumerAgent.PERCEPTION_KEY]` before calling `make_decisions()`.
+- **Events**: `model.publish("adopted", agent.agent_id, {...})` sends a `ModelEvent` stamped with `model.current_time`. Subscribe to one event type or to `EventBus.ALL_EVENTS` (`"*"`).
+- **Validation**: `ModelValidator.validate_model(model, required_socioeconomic=["owner"])` checks the environment and every agent. By default it requires `income` and `age`.
+- **Defaults**: `ChoiceModule.add_trigger()`, `ConsumerChoiceModel.collect_data()` and `run_simulation()` have default implementations; override them as needed.
+
+## Running the tests
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
 
 ## Quick Start
 
-### Basic Usage
+A model implements the abstract classes and runs through `ConsumerChoiceModel`. This example
+simulates solar panel adoption: each household weighs affordability and environmental benefit,
+and the panel price falls by 5% per step.
 
 ```python
+from dataclasses import dataclass
+
 from consumer_choice_metamodel import (
-    ConsumerChoiceModel, ConsumerAgent, Environment,
-    AgentAttributes, ChoiceModule, PhysicalAsset
+    AgentAttributes, ChoiceModule, ConsumerAgent, ConsumerChoiceModel,
+    Environment, EvaluationDimension, PhysicalAsset, Transformer,
 )
 
-# Import specific classes
-from consumer_choice_metamodel import ConsumerAgent, Environment, AgentAttributes
 
-# Import entire modules
-from consumer_choice_metamodel import agent, environment
+@dataclass
+class HouseholdAttributes(AgentAttributes):
+    income: float = 50000.0
+    age: int = 40
+    environmental_concern: float = 0.5
+    has_solar: bool = False
 
-# Import from specific modules
-from consumer_choice_metamodel.agent import ChoiceModule
-from consumer_choice_metamodel.environment import PhysicalAsset
-```
-
-### Example Implementation
-
-```python
-from consumer_choice_metamodel import AgentAttributes
-
-class MyAgentAttributes(AgentAttributes):
-    def __init__(self, agent_id: str, income: float, age: int):
-        super().__init__(agent_id)
-        self.income = income
-        self.age = age
-    
     def get_psychological_attributes(self):
-        return {
-            'risk_aversion': 0.5,
-            'environmental_concern': 0.7,
-            'price_sensitivity': 0.8
-        }
-    
+        return {"environmental_concern": self.environmental_concern}
+
     def get_socioeconomic_attributes(self):
-        return {
-            'income': self.income,
-            'age': self.age
-        }
-    
+        return {"income": self.income, "age": self.age}
+
     def get_stock_variables(self):
-        return {'car': None, 'house': 'apartment'}
-    
+        return {"has_solar": self.has_solar}
+
     def update_attributes(self, changes):
         for key, value in changes.items():
             setattr(self, key, value)
 
-# Create an agent with custom attributes
-agent_attrs = MyAgentAttributes("agent_001", income=50000, age=35)
-agent = ConsumerAgent(attributes=agent_attrs)
+
+@dataclass(eq=False)
+class SolarPanel(PhysicalAsset):
+    price: float = 15000.0
+
+    def get_availability(self):
+        return 1.0
+
+    def get_cost(self):
+        return self.price
+
+    def get_properties(self):
+        return {"environmental_benefit": 0.9}
+
+
+class SolarChoice(ChoiceModule):
+    def evaluate_option(self, option, evaluation_context):
+        a = self.agent_attributes
+        return {
+            EvaluationDimension.FINANCIAL: a.income / option.get_cost() / 10,
+            EvaluationDimension.ENVIRONMENTAL:
+                a.environmental_concern * option.get_properties()["environmental_benefit"],
+        }
+
+    def aggregate_evaluations(self, evaluations):
+        return sum(evaluations.values())
+
+    def make_choice(self, options, choice_context):
+        scored = [(self.aggregate_evaluations(self.evaluate_option(o, choice_context)), o)
+                  for o in options]
+        utility, best = max(scored, key=lambda s: s[0], default=(0.0, None))
+        return best if utility > choice_context["threshold"] else None
+
+
+class Household(ConsumerAgent):
+    def perceive_environment(self, environment):
+        return {"options": environment.get_available_options(self.agent_id, {})}
+
+    def make_decisions(self, environment):
+        if self.attributes.has_solar:
+            return []
+        options = self.memory[self.PERCEPTION_KEY]["options"]
+        choice = self.choice_module.make_choice(options, {"threshold": 1.0})
+        return [{"action": "adopt", "technology": choice.name}] if choice else []
+
+    def communicate(self, environment, decisions):
+        for decision in decisions:
+            environment.add_communication({"agent_id": self.agent_id, **decision})
+
+    def update_state(self, decisions, environment_feedback):
+        if decisions:
+            self.attributes.update_attributes({"has_solar": True})
+
+
+class Market(Environment):
+    def add_physical_asset(self, asset):
+        self.physical_assets.append(asset)
+
+    def add_knowledge_asset(self, asset):
+        self.knowledge_assets.append(asset)
+
+    def get_available_options(self, agent_id, context):
+        return list(self.physical_assets)
+
+    def get_relevant_knowledge(self, agent_id, context):
+        return list(self.knowledge_assets)
+
+    def update_environment(self, current_time):
+        for asset in self.physical_assets:
+            asset.price *= 0.95
+
+    def add_communication(self, communication):
+        self.communications.append(communication)
+
+
+class SolarModel(ConsumerChoiceModel):
+    def initialize_model(self, parameters):
+        self.model_parameters = parameters
+        self.environment = self.create_environment(parameters)
+        self.add_agents(self.create_agents(parameters["agent_count"], parameters))
+
+    def create_environment(self, environment_config):
+        market = Market()
+        market.add_physical_asset(SolarPanel("solar_panel"))
+        return market
+
+    def create_agents(self, agent_count, agent_config):
+        agents = []
+        for i in range(agent_count):
+            attrs = HouseholdAttributes(f"household_{i}",
+                                        income=self.rng.uniform(30000, 120000),
+                                        environmental_concern=self.rng.random())
+            agents.append(Household(attrs.agent_id, attrs,
+                                    SolarChoice(attrs.agent_id, attrs), Transformer([], [])))
+        return agents
+
+    def collect_data(self):
+        return {"time": self.current_time,
+                "adopters": sum(a.attributes.has_solar for a in self.agents)}
+
+
+model = SolarModel(seed=42)
+model.initialize_model({"agent_count": 100})
+results = model.run_simulation(10)
+print(results["final_stats"])     # {'time': 10, 'adopters': ...}
 ```
+
+`examples/example_adoption.py` is a larger example with information filters, cognitive
+biases, a spatial network, policy incentives and decision triggers.
 
 ## Documentation
 
@@ -167,7 +297,7 @@ For more detailed documentation and examples, please refer to the research paper
 
 ## License
 
-Please check the repository for license information.
+Apache License 2.0, see [LICENSE](LICENSE).
 
 ## Support
 
@@ -186,7 +316,18 @@ Liffey, A. et al. "Consumer Choice Metamodel: A Conceptual Validation Approach"
 ## Changelog
 
 ### Version History
-- Check the repository's releases page for detailed version history and changes
+
+#### 1.1.0
+- Added `schedule.py` with `Scheduler`, `SequentialScheduler`, `RandomActivationScheduler`, `PhasedScheduler` and `Phase`; `ConsumerChoiceModel.step()` delegates agent activation to `model.scheduler`; the default `SequentialScheduler` activates agents in list order.
+- `ConsumerChoiceModel(seed=..., scheduler=...)` owns a seeded `rng`, with `reseed()` and `add_agents()`; `ConsumerAgent` and `ModelComponentFactory` gained an `rng` attribute.
+- `ConsumerAgent.step()` stores the perception in `memory["perception"]`.
+- `ModelValidator.validate_agent_attributes()` takes `required_socioeconomic`; new `validate_model()`.
+- `EventBus` gained `unsubscribe()`, wildcard subscriptions and automatic timestamps; the model owns an `event_bus` and a `publish()` helper. `ModelEvent` accepts a `timestamp`.
+- `ModelEvent` is a dataclass. `PhysicalAsset` and `KnowledgeAsset` compare by identity, are hashable and generate `asset_id` automatically, so dataclass subclasses can declare required fields.
+- Default implementations for `ChoiceModule.add_trigger()`, `ConsumerChoiceModel.collect_data()` and `run_simulation()`.
+- Added tests; aligned the version number across `pyproject.toml`, `setup.py` and the package.
+
+Subclasses that override `ConsumerChoiceModel.__init__` must call `super().__init__()`, which sets up `rng`, `scheduler` and `event_bus`.
 
 ---
 

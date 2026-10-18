@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="consumer-choice-metamodel",
-    version="1.0.0",
+    version="1.1.0",
     author="Consumer Choice Metamodel Framework",
     description="Abstract framework for consumer choice modeling",
     long_description=long_description,
@@ -18,7 +18,7 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",

@@ -2,6 +2,7 @@
 Factory pattern classes for creating model components
 """
 
+import random
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
@@ -12,7 +13,18 @@ from .information import Transformer
 
 class ModelComponentFactory(ABC):
     """Abstract factory for creating model components"""
-    
+
+    @property
+    def rng(self) -> random.Random:
+        """Random number generator for stochastic component creation (set to the model's rng)"""
+        if getattr(self, '_rng', None) is None:
+            self._rng = random.Random()
+        return self._rng
+
+    @rng.setter
+    def rng(self, value: random.Random) -> None:
+        self._rng = value
+
     @abstractmethod
     def create_agent_attributes(self, config: Dict[str, Any]) -> AgentAttributes:
         """Create agent attributes"""
