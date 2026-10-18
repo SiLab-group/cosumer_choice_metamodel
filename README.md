@@ -273,26 +273,34 @@ biases, a spatial network, policy incentives and decision triggers.
 
 Apache License 2.0, see [LICENSE](LICENSE).
 
-
 ## Citation
 
 If you use this package in your research, please cite:
 
-> Liffey, A. et al. (2026). A Conceptual Validation of the Consumer Choice Framework.
-> In: Verhagen, H., Chappin, E., Scholz, G. (eds), *Advances in Social Simulation* (SSC 2025).
-> Springer Proceedings in Complexity. Springer, Cham.
+> Liffey, A., Günther, A., Firoozyalizadeh, S., Elassal, O., Abrell, J., Weigt, H.,
+> van der Kam, M., Panos, E., Schubert, I., Hahnel, U., Schumann, R. (2026).
+> A Conceptual Validation of the Consumer Choice Framework.
+> In: Verhagen, H., Chappin, E., Scholz, G. (eds), *Advances in Social Simulation* (SSC 2025),
+> pp. 366–376. Springer Proceedings in Complexity. Springer, Cham.
 > [https://doi.org/10.1007/978-3-032-31712-4_27](https://doi.org/10.1007/978-3-032-31712-4_27)
 
 ```bibtex
 @inproceedings{liffey2026consumerchoice,
-  author    = {Liffey, Amy and others},
+  author    = {Liffey, Amy and G{\"u}nther, Anne and Firoozyalizadeh, Shadi and
+               Elassal, Ola and Abrell, Jan and Weigt, Hannes and
+               van der Kam, Marten and Panos, Evangelos and Schubert, Iljana and
+               Hahnel, Ulf and Schumann, Ren{\'e}},
+  editor    = {Verhagen, Harko and Chappin, Emile and Scholz, Geeske},
   title     = {A Conceptual Validation of the Consumer Choice Framework},
   booktitle = {Advances in Social Simulation},
-  editor    = {Verhagen, Harko and Chappin, Emile and Scholz, Geeske},
   series    = {Springer Proceedings in Complexity},
-  publisher = {Springer, Cham},
+  publisher = {Springer Nature Switzerland},
+  address   = {Cham},
   year      = {2026},
+  pages     = {366--376},
+  isbn      = {978-3-032-31712-4},
   doi       = {10.1007/978-3-032-31712-4_27}
 }
 ```
+
 
