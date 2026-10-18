@@ -92,7 +92,7 @@ class ConsumerAgent(ABC):
         self.choice_module = choice_module
         self.transformer = transformer
         self.memory: Dict[str, Any] = {}
-        # replaced by the model's shared generator in ConsumerChoiceModel.add_agents()
+        # set to the model's rng by ConsumerChoiceModel.add_agents()
         self.rng = rng if rng is not None else random.Random()
     
     @abstractmethod
@@ -117,7 +117,7 @@ class ConsumerAgent(ABC):
     
     def step(self, environment: 'Environment') -> None:
         """Main agent step function - template method pattern"""
-        # 1. Perceive environment (kept in memory so make_decisions can use it)
+        # 1. Perceive environment (stored for make_decisions)
         perception = self.perceive_environment(environment)
         self.memory[self.PERCEPTION_KEY] = perception
 

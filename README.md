@@ -16,7 +16,7 @@ The Consumer Choice Metamodel is a framework for building consumer behavior simu
 
 ### Install from GitHub
 
-Since this package is hosted on GitHub, you can install it directly using pip:
+Install with pip:
 
 ```bash
 pip install git+https://github.com/SiLab-group/cosumer_choice_metamodel.git
@@ -45,7 +45,7 @@ pip install -e .
 
 ### Dependencies
 
-The package likely depends on standard Python libraries. If there are additional requirements, they will be automatically installed during the pip installation process.
+The core package uses only the Python standard library. Optional extras: `dev` (testing and linting), `docs` and `simulation` (numpy, pandas, networkx, matplotlib, scipy), e.g. `pip install -e ".[dev]"`.
 
 ## Package Structure
 
@@ -91,14 +91,14 @@ consumer_choice_metamodel/
 - `Scheduler`: Abstract base deciding how agents are activated in a step
 - `SequentialScheduler`: Every agent once, in list order (default)
 - `RandomActivationScheduler`: Every agent once, in a new random order each step
-- `PhasedScheduler` / `Phase`: Named stages run one after another, each across all agents (or once per step for bookkeeping)
+- `PhasedScheduler` / `Phase`: Named stages run one after another, each across all agents; a `Phase` with `per_agent=False` runs once per step
 
 ### Model and Factory Classes
 - `ConsumerChoiceModel`: Main simulation model class; owns the seeded `rng`, the `scheduler` and the `event_bus`
 - `ModelComponentFactory`: Abstract factory for creating model components
 
 ### Utilities
-- `ModelValidator`: Validation utilities for model components (required socio-economic attributes are configurable)
+- `ModelValidator`: Validation utilities for model components, with configurable required socio-economic attributes
 - `ModelEvent`: Event system for model communication
 - `EventBus`: Event distribution system with timestamps, wildcard subscriptions and `unsubscribe`
 
@@ -127,8 +127,8 @@ model = MyModel(
 - **Randomness**: draw every random number from `model.rng` (a `random.Random`). Register agents with `model.add_agents(agents)` so that `agent.rng` is the same generator, and set `factory.rng = model.rng` when a factory creates stochastic components.
 - **Perception**: `ConsumerAgent.step()` stores the result of `perceive_environment()` in `agent.memory[ConsumerAgent.PERCEPTION_KEY]` before calling `make_decisions()`.
 - **Events**: `model.publish("adopted", agent.agent_id, {...})` sends a `ModelEvent` stamped with `model.current_time`. Subscribe to one event type or to `EventBus.ALL_EVENTS` (`"*"`).
-- **Validation**: `ModelValidator.validate_model(model, required_socioeconomic=["owner"])` checks the environment and every agent; the default still requires `income` and `age`.
-- **Defaults**: `ChoiceModule.add_trigger()`, `ConsumerChoiceModel.collect_data()` and `run_simulation()` now have working default implementations that you can override.
+- **Validation**: `ModelValidator.validate_model(model, required_socioeconomic=["owner"])` checks the environment and every agent. By default it requires `income` and `age`.
+- **Defaults**: `ChoiceModule.add_trigger()`, `ConsumerChoiceModel.collect_data()` and `run_simulation()` have default implementations; override them as needed.
 
 ## Running the tests
 
@@ -209,7 +209,7 @@ For more detailed documentation and examples, please refer to the research paper
 
 ## License
 
-Please check the repository for license information.
+Apache License 2.0, see [LICENSE](LICENSE).
 
 ## Support
 
@@ -230,15 +230,16 @@ Liffey, A. et al. "Consumer Choice Metamodel: A Conceptual Validation Approach"
 ### Version History
 
 #### 1.1.0
-- Added `schedule.py` with `Scheduler`, `SequentialScheduler`, `RandomActivationScheduler`, `PhasedScheduler` and `Phase`; `ConsumerChoiceModel.step()` delegates agent activation to `model.scheduler` (default keeps the previous in-order behaviour).
+- Added `schedule.py` with `Scheduler`, `SequentialScheduler`, `RandomActivationScheduler`, `PhasedScheduler` and `Phase`; `ConsumerChoiceModel.step()` delegates agent activation to `model.scheduler`; the default `SequentialScheduler` activates agents in list order.
 - `ConsumerChoiceModel(seed=..., scheduler=...)` owns a seeded `rng`, with `reseed()` and `add_agents()`; `ConsumerAgent` and `ModelComponentFactory` gained an `rng` attribute.
-- `ConsumerAgent.step()` keeps the perception in `memory["perception"]` (it was previously discarded).
+- `ConsumerAgent.step()` stores the perception in `memory["perception"]`.
 - `ModelValidator.validate_agent_attributes()` takes `required_socioeconomic`; new `validate_model()`.
 - `EventBus` gained `unsubscribe()`, wildcard subscriptions and automatic timestamps; the model owns an `event_bus` and a `publish()` helper. `ModelEvent` accepts a `timestamp`.
+- `ModelEvent` is a dataclass. `PhysicalAsset` and `KnowledgeAsset` compare by identity, are hashable and generate `asset_id` automatically, so dataclass subclasses can declare required fields.
 - Default implementations for `ChoiceModule.add_trigger()`, `ConsumerChoiceModel.collect_data()` and `run_simulation()`.
 - Added tests; aligned the version number across `pyproject.toml`, `setup.py` and the package.
 
-Existing subclasses keep working unchanged, provided that a subclass which overrides `ConsumerChoiceModel.__init__` calls `super().__init__()` (`step()` now needs `self.scheduler`).
+Subclasses that override `ConsumerChoiceModel.__init__` must call `super().__init__()`, which sets up `rng`, `scheduler` and `event_bus`.
 
 ---
 

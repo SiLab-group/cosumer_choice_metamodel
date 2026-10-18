@@ -57,5 +57,5 @@ class Transformer:
     
     def process_outgoing(self, agent_attributes: AgentAttributes, 
                         communication: Dict[str, Any]) -> Dict[str, Any]:
-        """Process outgoing communication (can be overridden for specific distortions)"""
+        """Return outgoing communication unchanged; override to transform it"""
         return communication

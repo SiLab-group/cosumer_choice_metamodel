@@ -9,16 +9,12 @@ from consumer_choice_metamodel import (
     RandomActivationScheduler, SequentialScheduler, TriggerType,
 )
 
-from conftest import SimpleAgent, SimpleAttributes, SimpleChoice
+from conftest import SimpleAgent, SimpleAsset, SimpleAttributes, SimpleChoice
 
 
 def _ids(model, order_log):
     return [agent_id for _, agent_id in order_log]
 
-
-# ---------------------------------------------------------------------------
-# Schedulers
-# ---------------------------------------------------------------------------
 
 class TestSchedulers:
 
@@ -86,10 +82,6 @@ class TestSchedulers:
         assert seen["a"] != seen["b"]
 
 
-# ---------------------------------------------------------------------------
-# Random number generation
-# ---------------------------------------------------------------------------
-
 class TestRandomness:
 
     def test_add_agents_shares_model_rng(self, make_model):
@@ -116,10 +108,6 @@ class TestRandomness:
         assert 0 <= agent.rng.random() < 1
 
 
-# ---------------------------------------------------------------------------
-# Perception memory
-# ---------------------------------------------------------------------------
-
 class TestPerception:
 
     def test_step_stores_perception_before_decisions(self, make_model):
@@ -137,10 +125,6 @@ class TestPerception:
         model.step()
         assert model.agents[0].memory['feedback'] == {'neighbors': ["a1", "a2"]}
 
-
-# ---------------------------------------------------------------------------
-# Validation
-# ---------------------------------------------------------------------------
 
 class TestValidator:
 
@@ -176,10 +160,6 @@ class TestValidator:
         model.environment = None
         assert ModelValidator.validate_model(model) == ["Model has no environment"]
 
-
-# ---------------------------------------------------------------------------
-# Event bus
-# ---------------------------------------------------------------------------
 
 class TestEventBus:
 
@@ -240,10 +220,6 @@ class TestEventBus:
         assert len(received) == 1
 
 
-# ---------------------------------------------------------------------------
-# Concrete defaults
-# ---------------------------------------------------------------------------
-
 class TestDefaults:
 
     def test_default_add_trigger(self):
@@ -261,3 +237,43 @@ class TestDefaults:
         assert [d['time'] for d in results['simulation_data']] == [0, 1, 2, 3, 4]
         assert results['final_stats'] == {'time': 4, 'agent_count': 3}
         assert results['parameters'] == {'agent_count': 3}
+
+
+class TestDataclasses:
+
+    def test_model_event_fields(self):
+        event = ModelEvent("adopted", "a0", {"technology": "PV"})
+        assert event.timestamp is None
+        assert event == ModelEvent("adopted", "a0", {"technology": "PV"})
+        assert "adopted" in repr(event)
+
+    def test_asset_subclass_can_be_a_dataclass(self):
+        from dataclasses import dataclass
+
+        @dataclass(eq=False)
+        class HeatPump(SimpleAsset):
+            price: float
+
+        pump = HeatPump("heat_pump", 12000.0)
+        assert pump.price == 12000.0
+        assert pump.asset_id
+
+    def test_assets_compare_by_identity(self):
+        a, b = SimpleAsset("thing"), SimpleAsset("thing")
+        assert a != b
+        assert a.asset_id != b.asset_id
+        assert len({a, b}) == 2
+        assert {a: 1}[a] == 1
+
+    def test_knowledge_asset_hashable(self):
+        from consumer_choice_metamodel import KnowledgeAsset
+
+        class Note(KnowledgeAsset):
+            def get_reliability(self):
+                return 1.0
+
+            def get_content(self):
+                return {}
+
+        n = Note("topic", "source")
+        assert n in {n}

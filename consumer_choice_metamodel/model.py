@@ -59,12 +59,9 @@ class ConsumerChoiceModel(ABC):
         return event
 
     def step(self) -> None:
-        """Execute one model step"""
-        # Update environment
+        """Execute one model step: update the environment, then activate agents"""
         if self.environment:
             self.environment.update_environment(self.current_time)
-
-        # Execute agent steps
         self.scheduler.run(self, self.agents)
 
         self.current_time += 1

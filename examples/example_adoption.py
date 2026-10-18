@@ -924,14 +924,6 @@ def run_example():
     print("Energy Technology Adoption Example")
     print("=" * 50)
 
-    # Model parameters
-    # parameters = {
-    #     'agent_count': 200,
-    #     'environment': {},
-    #     'agents': {},
-    #     'random_seed': 42
-    # }
-
     parameters = {
         'agent_count': 200,  # Number of agents
         'simulation_steps': 100,  # Time steps to run

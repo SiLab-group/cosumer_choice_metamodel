@@ -2,6 +2,7 @@
 Validation and event system utilities for the Consumer Choice Metamodel
 """
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, Iterable, List, Any, Optional, Callable
 
 from .agent import AgentAttributes, ChoiceModule
@@ -11,8 +12,7 @@ if TYPE_CHECKING:
     from .model import ConsumerChoiceModel
 
 
-# Socio-economic attributes required by default; pass required_socioeconomic=()
-# (or your own list) when a model's population data does not have them.
+# required by default; pass required_socioeconomic=() or your own list to change
 DEFAULT_REQUIRED_SOCIOECONOMIC = ('income', 'age')
 
 
@@ -47,9 +47,7 @@ class ModelValidator:
         """Validate choice module configuration"""
         errors = []
 
-        # Validation logic for choice module
-        # Can be extended based on specific requirements
-
+        # returns no errors; override to add model-specific checks
         return errors
 
     @staticmethod
@@ -85,15 +83,13 @@ class ModelValidator:
         return errors
 
 
+@dataclass
 class ModelEvent:
     """Base class for model events"""
-
-    def __init__(self, event_type: str, source: str, data: Dict[str, Any],
-                 timestamp: Optional[int] = None):
-        self.event_type = event_type
-        self.source = source
-        self.data = data
-        self.timestamp: Optional[int] = timestamp
+    event_type: str
+    source: str
+    data: Dict[str, Any]
+    timestamp: Optional[int] = None
 
 
 class EventBus:
@@ -117,7 +113,7 @@ class EventBus:
         self.subscribers[event_type].append(callback)
 
     def unsubscribe(self, event_type: str, callback: Callable[[ModelEvent], None]) -> None:
-        """Remove a subscription; does nothing if it was not subscribed"""
+        """Remove a subscription; unknown callbacks are ignored"""
         callbacks = self.subscribers.get(event_type, [])
         if callback in callbacks:
             callbacks.remove(callback)

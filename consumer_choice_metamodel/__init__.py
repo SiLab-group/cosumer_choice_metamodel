@@ -1,14 +1,12 @@
 """
 Consumer Choice Metamodel Framework
-===================================
 
 This package provides abstract base classes and interfaces for implementing
 the Consumer Choice Metamodel as described in "Consumer Choice Metamodel: 
 A Conceptual Validation Approach" by Amy Liffey et al.
 
-The framework defines the core architectural components without specific
-implementation details, allowing for flexible adaptation across different
-domains and modeling platforms.
+The framework defines the core architectural components as abstract classes,
+to be implemented for a specific domain and modeling platform.
 
 Usage:
     from consumer_choice_metamodel import (
@@ -17,39 +15,22 @@ Usage:
     )
 """
 
-# Import all base types and enums
 from .types import TriggerType, EvaluationDimension
-
-# Import agent-related classes
 from .agent import AgentAttributes, ChoiceModule, ConsumerAgent
-
-# Import environment and asset classes
 from .environment import (
-    PhysicalAsset, KnowledgeAsset, Network, 
+    PhysicalAsset, KnowledgeAsset, Network,
     RulesOfInteraction, ExogenousProcess, Environment
 )
-
-# Import information processing classes
 from .information import InformationFilter, InformationDistorter, Transformer
-
-# Import scheduling classes
 from .schedule import Scheduler, SequentialScheduler, RandomActivationScheduler, Phase, PhasedScheduler
-
-# Import main model class
 from .model import ConsumerChoiceModel
-
-# Import factory classes
 from .factory import ModelComponentFactory
-
-# Import utilities
 from .utils import ModelValidator, ModelEvent, EventBus
 
-# Package metadata
 __version__ = "1.1.0"
 __author__ = "Consumer Choice Metamodel Framework"
 __description__ = "Abstract framework for consumer choice modeling"
 
-# Define what gets imported with "from consumer_choice_metamodel import *"
 __all__ = [
     # Types
     'TriggerType',
@@ -100,8 +81,7 @@ def get_version():
 
 def create_simple_model_template():
     """
-    Return a simple template for implementing a basic consumer choice model.
-    This can serve as a starting point for users.
+    Return a starting template for implementing a basic consumer choice model.
     """
     template = """
 # Example implementation template

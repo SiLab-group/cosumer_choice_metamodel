@@ -21,7 +21,7 @@ class Scheduler(ABC):
 
 
 class SequentialScheduler(Scheduler):
-    """Activate every agent once, in list order (the original behaviour)"""
+    """Activate every agent once, in list order (default)"""
 
     def run(self, model: 'ConsumerChoiceModel', agents: Sequence['ConsumerAgent']) -> None:
         for agent in list(agents):
