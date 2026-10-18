@@ -1,6 +1,6 @@
 # Consumer Choice Metamodel
 
-This package provides abstract base classes and interfaces for implementing the Consumer Choice Metamodel as described in "Consumer Choice Metamodel: A Conceptual Validation Approach" by Amy Liffey et al.
+This package provides abstract base classes and interfaces for implementing the Consumer Choice Framework described in [Liffey et al. (2026)](https://doi.org/10.1007/978-3-032-31712-4_27), "A Conceptual Validation of the Consumer Choice Framework", *Advances in Social Simulation* (SSC 2025), Springer Proceedings in Complexity.
 
 ## Overview
 
@@ -282,11 +282,6 @@ print(results["final_stats"])     # {'time': 10, 'adopters': ...}
 `examples/example_adoption.py` is a larger example with information filters, cognitive
 biases, a spatial network, policy incentives and decision triggers.
 
-## Documentation
-
-For more detailed documentation and examples, please refer to the research paper:
-"Consumer Choice Metamodel: A Conceptual Validation Approach" by Amy Liffey et al.
-
 ## Contributing
 
 1. Fork the repository
@@ -299,33 +294,14 @@ For more detailed documentation and examples, please refer to the research paper
 
 Apache License 2.0, see [LICENSE](LICENSE).
 
-## Support
-
-For questions, issues, or contributions, please:
-- Open an issue on [GitHub](https://github.com/SiLab-group/cosumer_choice_metamodel/issues)
-- Contact the SiLab-group team
 
 ## Citation
 
 If you use this package in your research, please cite:
 
 ```
-Liffey, A. et al. "Consumer Choice Metamodel: A Conceptual Validation Approach"
+Liffey, A. et al. (2026). A Conceptual Validation of the Consumer Choice Framework. In: Verhagen, H., Chappin, E., Scholz, G. (eds) Advances in Social Simulation. SSC 2025 2025. Springer Proceedings in Complexity. Springer, Cham. https://doi.org/10.1007/978-3-032-31712-4_27
 ```
-
-## Changelog
-
-### Version History
-
-#### 1.1.0
-- Added `schedule.py` with `Scheduler`, `SequentialScheduler`, `RandomActivationScheduler`, `PhasedScheduler` and `Phase`; `ConsumerChoiceModel.step()` delegates agent activation to `model.scheduler`; the default `SequentialScheduler` activates agents in list order.
-- `ConsumerChoiceModel(seed=..., scheduler=...)` owns a seeded `rng`, with `reseed()` and `add_agents()`; `ConsumerAgent` and `ModelComponentFactory` gained an `rng` attribute.
-- `ConsumerAgent.step()` stores the perception in `memory["perception"]`.
-- `ModelValidator.validate_agent_attributes()` takes `required_socioeconomic`; new `validate_model()`.
-- `EventBus` gained `unsubscribe()`, wildcard subscriptions and automatic timestamps; the model owns an `event_bus` and a `publish()` helper. `ModelEvent` accepts a `timestamp`.
-- `ModelEvent` is a dataclass. `PhysicalAsset` and `KnowledgeAsset` compare by identity, are hashable and generate `asset_id` automatically, so dataclass subclasses can declare required fields.
-- Default implementations for `ChoiceModule.add_trigger()`, `ConsumerChoiceModel.collect_data()` and `run_simulation()`.
-- Added tests; aligned the version number across `pyproject.toml`, `setup.py` and the package.
 
 Subclasses that override `ConsumerChoiceModel.__init__` must call `super().__init__()`, which sets up `rng`, `scheduler` and `event_bus`.
 
