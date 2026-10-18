@@ -139,60 +139,148 @@ pytest
 
 ## Quick Start
 
-### Basic Usage
+A model implements the abstract classes and runs through `ConsumerChoiceModel`. This example
+simulates solar panel adoption: each household weighs affordability and environmental benefit,
+and the panel price falls by 5% per step.
 
 ```python
+from dataclasses import dataclass
+
 from consumer_choice_metamodel import (
-    ConsumerChoiceModel, ConsumerAgent, Environment,
-    AgentAttributes, ChoiceModule, PhysicalAsset
+    AgentAttributes, ChoiceModule, ConsumerAgent, ConsumerChoiceModel,
+    Environment, EvaluationDimension, PhysicalAsset, Transformer,
 )
 
-# Import specific classes
-from consumer_choice_metamodel import ConsumerAgent, Environment, AgentAttributes
 
-# Import entire modules
-from consumer_choice_metamodel import agent, environment
+@dataclass
+class HouseholdAttributes(AgentAttributes):
+    income: float = 50000.0
+    age: int = 40
+    environmental_concern: float = 0.5
+    has_solar: bool = False
 
-# Import from specific modules
-from consumer_choice_metamodel.agent import ChoiceModule
-from consumer_choice_metamodel.environment import PhysicalAsset
-```
-
-### Example Implementation
-
-```python
-from consumer_choice_metamodel import AgentAttributes
-
-class MyAgentAttributes(AgentAttributes):
-    def __init__(self, agent_id: str, income: float, age: int):
-        super().__init__(agent_id)
-        self.income = income
-        self.age = age
-    
     def get_psychological_attributes(self):
-        return {
-            'risk_aversion': 0.5,
-            'environmental_concern': 0.7,
-            'price_sensitivity': 0.8
-        }
-    
+        return {"environmental_concern": self.environmental_concern}
+
     def get_socioeconomic_attributes(self):
-        return {
-            'income': self.income,
-            'age': self.age
-        }
-    
+        return {"income": self.income, "age": self.age}
+
     def get_stock_variables(self):
-        return {'car': None, 'house': 'apartment'}
-    
+        return {"has_solar": self.has_solar}
+
     def update_attributes(self, changes):
         for key, value in changes.items():
             setattr(self, key, value)
 
-# Create an agent with custom attributes
-agent_attrs = MyAgentAttributes("agent_001", income=50000, age=35)
-agent = ConsumerAgent(attributes=agent_attrs)
+
+@dataclass(eq=False)
+class SolarPanel(PhysicalAsset):
+    price: float = 15000.0
+
+    def get_availability(self):
+        return 1.0
+
+    def get_cost(self):
+        return self.price
+
+    def get_properties(self):
+        return {"environmental_benefit": 0.9}
+
+
+class SolarChoice(ChoiceModule):
+    def evaluate_option(self, option, evaluation_context):
+        a = self.agent_attributes
+        return {
+            EvaluationDimension.FINANCIAL: a.income / option.get_cost() / 10,
+            EvaluationDimension.ENVIRONMENTAL:
+                a.environmental_concern * option.get_properties()["environmental_benefit"],
+        }
+
+    def aggregate_evaluations(self, evaluations):
+        return sum(evaluations.values())
+
+    def make_choice(self, options, choice_context):
+        scored = [(self.aggregate_evaluations(self.evaluate_option(o, choice_context)), o)
+                  for o in options]
+        utility, best = max(scored, key=lambda s: s[0], default=(0.0, None))
+        return best if utility > choice_context["threshold"] else None
+
+
+class Household(ConsumerAgent):
+    def perceive_environment(self, environment):
+        return {"options": environment.get_available_options(self.agent_id, {})}
+
+    def make_decisions(self, environment):
+        if self.attributes.has_solar:
+            return []
+        options = self.memory[self.PERCEPTION_KEY]["options"]
+        choice = self.choice_module.make_choice(options, {"threshold": 1.0})
+        return [{"action": "adopt", "technology": choice.name}] if choice else []
+
+    def communicate(self, environment, decisions):
+        for decision in decisions:
+            environment.add_communication({"agent_id": self.agent_id, **decision})
+
+    def update_state(self, decisions, environment_feedback):
+        if decisions:
+            self.attributes.update_attributes({"has_solar": True})
+
+
+class Market(Environment):
+    def add_physical_asset(self, asset):
+        self.physical_assets.append(asset)
+
+    def add_knowledge_asset(self, asset):
+        self.knowledge_assets.append(asset)
+
+    def get_available_options(self, agent_id, context):
+        return list(self.physical_assets)
+
+    def get_relevant_knowledge(self, agent_id, context):
+        return list(self.knowledge_assets)
+
+    def update_environment(self, current_time):
+        for asset in self.physical_assets:
+            asset.price *= 0.95
+
+    def add_communication(self, communication):
+        self.communications.append(communication)
+
+
+class SolarModel(ConsumerChoiceModel):
+    def initialize_model(self, parameters):
+        self.model_parameters = parameters
+        self.environment = self.create_environment(parameters)
+        self.add_agents(self.create_agents(parameters["agent_count"], parameters))
+
+    def create_environment(self, environment_config):
+        market = Market()
+        market.add_physical_asset(SolarPanel("solar_panel"))
+        return market
+
+    def create_agents(self, agent_count, agent_config):
+        agents = []
+        for i in range(agent_count):
+            attrs = HouseholdAttributes(f"household_{i}",
+                                        income=self.rng.uniform(30000, 120000),
+                                        environmental_concern=self.rng.random())
+            agents.append(Household(attrs.agent_id, attrs,
+                                    SolarChoice(attrs.agent_id, attrs), Transformer([], [])))
+        return agents
+
+    def collect_data(self):
+        return {"time": self.current_time,
+                "adopters": sum(a.attributes.has_solar for a in self.agents)}
+
+
+model = SolarModel(seed=42)
+model.initialize_model({"agent_count": 100})
+results = model.run_simulation(10)
+print(results["final_stats"])     # {'time': 10, 'adopters': ...}
 ```
+
+`examples/example_adoption.py` is a larger example with information filters, cognitive
+biases, a spatial network, policy incentives and decision triggers.
 
 ## Documentation
 

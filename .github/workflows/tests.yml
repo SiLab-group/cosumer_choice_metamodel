@@ -29,13 +29,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e . pytest pytest-cov
 
+      # includes tests/test_example.py, which runs examples/example_adoption.py
       - name: Run tests
         run: pytest
-
-      - name: Run example
-        run: |
-          python -c "
-          import examples.example_adoption as ex
-          ex.plot_results = lambda curves: None
-          ex.run_example()
-          "
